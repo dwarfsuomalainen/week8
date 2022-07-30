@@ -1,38 +1,33 @@
-
-
-var express = require('express');
+var express = require("express");
 var router = express.Router();
 const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
-const {body, validationResult, check } = require("express-validator");
+const { body, validationResult, check } = require("express-validator");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const validateToken = require("../auth/validateToken");
 const extractToken = require("../auth/extractToken");
-var emailY = 0;
-const multer = require("multer")
+const multer = require("multer");
 const storage = multer.memoryStorage();
-const upload = multer({storage})
+const upload = multer({ storage });
 const Todos = require("../models/Todo");
 
 /* GET users listing. */
 router.get("/private", validateToken, (req, res, next) => {
   const { email } = extractToken(req);
-  console.log(emailY);
   res.json({ email });
-  
+
   /*User.find({}, (err, users) =>{
     if(err) return next(err);
     res.render("users", {users});
   })*/
-  
 });
 
-router.get('/login', (req, res, next) => {
-  res.render('login');
+router.get("/login", (req, res, next) => {
+  res.render("login");
 });
-router.get('/login.html', (req, res, next) => {
-  res.redirect('/login.html');
+router.get("/login.html", (req, res, next) => {
+  res.redirect("/login.html");
 });
 
 // todos
@@ -63,85 +58,84 @@ router.get("/todos", validateToken, (req, res, next) => {
     console.log(err, existingTodo);
     if (err) return next(err);
 
-    res.status(200).send(existingTodo? existingTodo.items:[]); 
-    })
-  })
+    res.status(200).send(existingTodo ? existingTodo.items : []);
+  });
+});
 
+router.post("/user/login", upload.none(), (req, res, next) => {
+  User.findOne({ email: req.body.email }, (err, email) => {
+    if (err) throw err;
 
-router.post('/user/login', 
-  upload.none(),
-  (req, res, next) => {
-    User.findOne({email: req.body.email}, (err, email) =>{
-    if(err) throw err;
-    console.log(req.body);
-    emailY = req.body.email;
-
-    if(!email) {
-      return res.status(403).json({message: "Login failed"});
+    if (!email) {
+      return res.status(403).json({ message: "Login failed" });
     } else {
       bcrypt.compare(req.body.password, email.password, (err, isMatch) => {
-        if(err) throw err;
-        if(isMatch) {
+        if (err) throw err;
+        if (isMatch) {
           const jwtPayload = {
             id: email._id,
-            email: email.email
-          }
-          let emailX = jwtPayload.email
+            email: email.email,
+          };
+          let emailX = jwtPayload.email;
           console.log(jwtPayload.email);
           jwt.sign(
             jwtPayload,
             process.env.SECRET,
             {
-              expiresIn: 120
+              expiresIn: 120,
             },
             (err, token) => {
-              res.json({success: true, token,emailX});
+              res.json({ success: true, token, emailX });
             }
           );
         }
-      })
+      });
     }
-
-    })
-
+  });
 });
 
-
-router.get('/register.html', (req, res, next) => {
-  res.redirect('/register.html');
+router.get("/register.html", (req, res, next) => {
+  res.redirect("/register.html");
 });
-router.get('/register', (req, res, next) => {
-  res.render('register');
+router.get("/register", (req, res, next) => {
+  res.render("register");
 });
 
-router.post('/user/register/', 
+router.post(
+  "/user/register/",
   body("email").isEmail().trim(),
-  body("password").isLength({min: 8}),
+  body("password").isLength({ min: 8 }),
   (req, res, next) => {
     const errors = validationResult(req);
-    if(!errors.isEmpty()) {
-      console.log(errors);
-      console.log(req.body);
-      return res.status(400).json({errors: errors.array()});
+    if (!errors.isEmpty()) {
+      console.log("errors", errors);
+      const isPasswordError = errors
+        .array()
+        .some((x) => x.param === "password");
+      if (isPasswordError) {
+        return res.redirect("/register.html?error=password");
+      } else {
+        return res.redirect("/register.html");
+      }
     }
-    User.findOne({email: req.body.email}, (err, email) => {
-      if(err) {
+    User.findOne({ email: req.body.email }, (err, email) => {
+      if (err) {
         console.log(err);
-        throw err
-      };
-      if(email){
-        return res.status(403).json({email: "This email already registered"});
+        throw err;
+      }
+      if (email) {
+        return res.redirect("/register.html?error=exists");
       } else {
         bcrypt.genSalt(10, (err, salt) => {
           bcrypt.hash(req.body.password, salt, (err, hash) => {
-            if(err) throw err;
+            if (err) throw err;
             User.create(
               {
                 email: req.body.email,
-                password: hash
+                password: hash,
               },
               (err, ok) => {
-                if(err) throw err;
+                if (err) throw err;
                 return res.redirect("/login.html");
               }
             );
@@ -149,8 +143,7 @@ router.post('/user/register/',
         });
       }
     });
-});
-
-
+  }
+);
 
 module.exports = router;
