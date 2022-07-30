@@ -15,14 +15,20 @@ if (document.readyState !== "loading") {
 function onSubmit(event) {
   event.preventDefault();
   const formData = new FormData(event.target);
+  console.log(formData);
+  console.log(Object.fromEntries(formData.entries()))
   fetch("/api/user/register", {
       method: "POST",
-      body: formData
+      body: JSON.stringify(Object.fromEntries(formData.entries())),
+      headers: {["Content-Type"]: "application/json"}
   })  
-      .then(() => {
-              window.location.href="/login.html";
-          })
-          .catch( () => { document.getElementById("error").innerHTML = "O I N K !!!";} 
-            ) 
+      .then((response) => {
+        if (response.ok) {
+          window.location.href="/login.html";
+      }  else {
+          document.getElementById("error").innerHTML = "O I N K !!!";
+      }
+              
+          }) 
 }
 

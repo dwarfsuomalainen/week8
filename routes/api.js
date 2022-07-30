@@ -4,24 +4,26 @@ var express = require('express');
 var router = express.Router();
 const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
-const {body, validationResult } = require("express-validator");
+const {body, validationResult, check } = require("express-validator");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const validateToken = require("../auth/validateToken");
+const extractToken = require("../auth/extractToken");
 var emailY = 0;
 const multer = require("multer")
 const storage = multer.memoryStorage();
 const upload = multer({storage})
 
 /* GET users listing. */
-router.get('/private', validateToken, (req, res, next) => {
+router.get("/private", validateToken, (req, res, next) => {
+  const { email } = extractToken(req);
   console.log(emailY);
-  //res.json({"email": emailY})
+  res.json({ email });
   
-  User.find({}, (err, users) =>{
+  /*User.find({}, (err, users) =>{
     if(err) return next(err);
     res.render("users", {users});
-  })
+  })*/
   
 });
 
@@ -30,6 +32,26 @@ router.get('/login', (req, res, next) => {
 });
 router.get('/login.html', (req, res, next) => {
   res.redirect('/login.html');
+});
+
+// todos
+
+router.post("/todos/", validateToken, (req, res, next) => {
+  const { id } = extractToken(req);
+
+  Todos.findOne({ user: id }, (err, existingTodo) => {
+    if (err) return next(err);
+    if (!existingTodo) {
+      new Todos({ user: id, items: req.body.items }).save((err) => {
+        if (err) return next(err);
+        return res.status(200).send("ok");
+      });
+    } else {
+      existingTodo.items = [...existingTodo.items, ...req.body.items];
+      existingTodo.save();
+      return res.send("ok2");
+    }
+  });
 });
 
 router.post('/user/login', 
@@ -84,6 +106,8 @@ router.post('/user/register/',
   (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
+      console.log(errors);
+      console.log(req.body);
       return res.status(400).json({errors: errors.array()});
     }
     User.findOne({email: req.body.email}, (err, email) => {
@@ -104,7 +128,7 @@ router.post('/user/register/',
               },
               (err, ok) => {
                 if(err) throw err;
-                return res.redirect("/api/login");
+                return res.redirect("/login.html");
               }
             );
           });
