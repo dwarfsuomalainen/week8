@@ -88,6 +88,8 @@ router.post("/user/login", upload.none(), (req, res, next) => {
               res.json({ success: true, token, emailX });
             }
           );
+        } else {
+          return res.status(403).json({ message: "Login failed" });
         }
       });
     }
