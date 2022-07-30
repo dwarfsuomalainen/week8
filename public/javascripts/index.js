@@ -49,7 +49,7 @@ if (document.readyState !== "loading") {
     })
         .then(response => response.ok? response.json():undefined)
         .then (data => {
-            if(data?.email) {console.log (data.email);
+            if(data && data.email) {console.log (data.email);
                 let vvv = document.getElementById("links");
                 vvv.classList.add("hidden");
                 let bbb = document.getElementById("buttonLogout");

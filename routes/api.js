@@ -63,7 +63,7 @@ router.get("/todos", validateToken, (req, res, next) => {
     console.log(err, existingTodo);
     if (err) return next(err);
 
-    res.status(200).send(existingTodo?.items||[]); 
+    res.status(200).send(existingTodo? existingTodo.items:[]); 
     })
   })
 
