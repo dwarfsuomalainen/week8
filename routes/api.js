@@ -13,6 +13,7 @@ var emailY = 0;
 const multer = require("multer")
 const storage = multer.memoryStorage();
 const upload = multer({storage})
+const Todos = require("../models/Todo");
 
 /* GET users listing. */
 router.get("/private", validateToken, (req, res, next) => {
@@ -53,6 +54,19 @@ router.post("/todos/", validateToken, (req, res, next) => {
     }
   });
 });
+
+router.get("/todos", validateToken, (req, res, next) => {
+  console.log("O I N K ");
+  const { id } = extractToken(req);
+
+  Todos.findOne({ user: id }, (err, existingTodo) => {
+    console.log(err, existingTodo);
+    if (err) return next(err);
+
+    res.status(200).send(existingTodo?.items||[]); 
+    })
+  })
+
 
 router.post('/user/login', 
   upload.none(),
