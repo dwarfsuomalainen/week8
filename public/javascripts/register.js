@@ -7,7 +7,6 @@ if (document.readyState !== "loading") {
 }
 
 function initializeCodeRegister() {
-  //document.getElementById("login-form").addEventListener("submit", onSubmit);
   handleErrorParam();
 }
 
@@ -25,22 +24,4 @@ function handleErrorParam() {
     errorContainer.classList.add('card-panel');
     errorContainer.innerText = errors[error];
   }
-}
-
-function onSubmit(event) {
-  event.preventDefault();
-  const formData = new FormData(event.target);
-  console.log(formData);
-  console.log(Object.fromEntries(formData.entries()));
-  fetch("/api/user/register", {
-    method: "POST",
-    body: JSON.stringify(Object.fromEntries(formData.entries())),
-    headers: { ["Content-Type"]: "application/json" },
-  }).then((response) => {
-    if (response.ok) {
-      window.location.href = "/login.html";
-    } else {
-      document.getElementById("error").innerHTML = "O I N K !!!";
-    }
-  });
 }
